@@ -159,7 +159,7 @@ namespace SolutionParser_VS2010
         /// </summary>
         private string convertBuildEventCommandLine(string commandLine)
         {
-            if (commandLine == null)
+            if (String.IsNullOrEmpty(commandLine))
             {
                 return "";
             }
@@ -232,19 +232,162 @@ namespace SolutionParser_VS2010
         /// </summary>
         private void parseLinkerSettings_Misc(VCConfiguration vcConfiguration, VCLinkerTool linkerTool, ProjectConfigurationInfo_CPP configurationInfo)
         {
+            #region General
+            // - Enable Incremental Linking
+            linkIncrementalType linkIncremental = Utils.call(() => (linkerTool.LinkIncremental));
+            switch (linkIncremental)
+            {
+                case linkIncrementalType.linkIncrementalYes:
+                    configurationInfo.addLinkFlag("/INCREMENTAL");
+                    break;
+
+                case linkIncrementalType.linkIncrementalNo:
+                    configurationInfo.addLinkFlag("/INCREMENTAL:NO");
+                    break;
+            }
+
+            // - Suppress Startup Banner
+            bool suppressStartupBanner = Utils.call(() => (linkerTool.SuppressStartupBanner));
+            if (suppressStartupBanner)
+            {
+                configurationInfo.addLinkFlag("/NOLOGO");
+            }
+            
+            // - Link Library Dependencies
             // Whether we implicitly link in libraries we depend on.
             // (We are assuming that all configurations of the project have the
             // same link-library-dependencies setting.)
             m_projectInfo.LinkLibraryDependencies = Utils.call(() => (linkerTool.LinkLibraryDependencies));
 
+            #endregion
+
+            #region Manifest file
+            // Disable manifest file
+            configurationInfo.addLinkFlag("/MANIFEST:NO");
+            #endregion
+
+            #region Debugging
             // Generate debug info...
             bool debugInfo = Utils.call(() => (linkerTool.GenerateDebugInformation));
-            if (debugInfo == true
-                &&
-                configurationInfo.getPreprocessorDefinitions().Contains("NDEBUG") == false)
+            if (debugInfo == true)
             {
-                configurationInfo.addCompilerFlag("-g");
+                configurationInfo.addLinkFlag("/DEBUG");
             }
+            #endregion
+
+            #region Optimization
+            // - Reference
+            optRefType reference = Utils.call(() => (linkerTool.OptimizeReferences));
+            switch (reference)
+            {
+                case optRefType.optReferences:
+                    configurationInfo.addLinkFlag("/OPT:REF");
+                    break;
+                    
+                case optRefType.optReferencesDefault:
+                    configurationInfo.addLinkFlag("/OPT:NOREF");
+                    break;
+            }
+
+            // - Enable COMDAT Folding
+            optFoldingType foldingType = Utils.call(() => (linkerTool.EnableCOMDATFolding));
+            switch (foldingType)
+            {
+                case optFoldingType.optFolding:
+                    configurationInfo.addLinkFlag("/OPT:ICF");
+                    break;
+
+                case optFoldingType.optNoFolding:
+                    configurationInfo.addLinkFlag("/OPT:NOICF");
+                    break;
+            }
+
+            // - Link Time Code Generation
+            LinkTimeCodeGenerationOption linkTImeCodeGeneration = Utils.call(() => (linkerTool.LinkTimeCodeGeneration));
+            switch (linkTImeCodeGeneration)
+            {
+                case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionUse:
+                    configurationInfo.addLinkFlag("/LTCG");
+                    break;
+
+                case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionInstrument:
+                    configurationInfo.addLinkFlag("/LTCG:PGInstrument");
+                    break;
+
+                case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionOptimize:
+                    configurationInfo.addLinkFlag("/LTCG:PGOptimize");
+                    break;
+
+                case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionUpdate:
+                    configurationInfo.addLinkFlag("/LTCG:PGUpdate");
+                    break;
+            }
+            #endregion
+
+            #region Advanced Property
+            // - Randomized Base Address
+            enumRandomizedBaseAddressBOOL randomizeBaseAddress = Utils.call(() => (linkerTool.RandomizedBaseAddress));
+            switch (randomizeBaseAddress)
+            {
+                case enumRandomizedBaseAddressBOOL.RandomizedBaseAddressYes:
+                    configurationInfo.addLinkFlag("/DYNAMICBASE");
+                    break;
+
+                case enumRandomizedBaseAddressBOOL.RandomizedBaseAddressNo:
+                    configurationInfo.addLinkFlag("/DYNAMICBASE:NO");
+                    break;
+            }
+
+            // - Data Execution Prevention
+            enumDataExecutionPreventionBOOL dataExecutionPrevention = Utils.call(() => (linkerTool.DataExecutionPrevention));
+            switch (dataExecutionPrevention)
+            {
+                case enumDataExecutionPreventionBOOL.DataExecutionPreventionYes:
+                    configurationInfo.addLinkFlag("/NXCOMPAT");
+                    break;
+
+                case enumDataExecutionPreventionBOOL.DataExecutionPreventionNo:
+                    configurationInfo.addLinkFlag("/NXCOMPAT:NO");
+                    break;
+            }
+            
+            // - Import Library
+            string dynamicLibOutputPath = Utils.call(() => (linkerTool.ImportLibrary));
+            if (string.IsNullOrEmpty(dynamicLibOutputPath))
+            {
+                configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (configurationInfo.OutputFolder+"${TargetName}.lib"));
+            }
+            else
+            {
+                configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (dynamicLibOutputPath));
+            }
+
+            // - Target Machine (TODO: complete the machine type)
+            machineTypeOption machineType = Utils.call(() => (linkerTool.TargetMachine));
+            switch (machineType)
+            {
+                case machineTypeOption.machineAMD64:
+                    configurationInfo.addLinkFlag("/MACHINE:X64");
+                    break;
+
+                case machineTypeOption.machineX86:
+                    configurationInfo.addLinkFlag("/MACHINE:X86");
+                    break;
+            }
+            
+            // - Error Reporting
+            linkerErrorReportingType errorReportType = Utils.call(() => (linkerTool.ErrorReporting));
+            switch (errorReportType)
+            {
+                case linkerErrorReportingType.linkerErrorReportingPrompt:
+                    configurationInfo.addLinkFlag("/ERRORREPORT:PROMT");
+                    break;
+
+                case linkerErrorReportingType.linkerErrorReportingQueue:
+                    configurationInfo.addLinkFlag("/ERRORREPORT:QUEUE");
+                    break;
+            }
+            #endregion
         }
 
         /// <summary>
@@ -323,50 +466,353 @@ namespace SolutionParser_VS2010
         }
 
         /// <summary>
-        /// Finds compiler flags.
+        /// Finds compiler vs flags
         /// </summary>
         private void parseCompilerSettings_CompilerFlags(VCConfiguration vcConfiguration, VCCLCompilerTool compilerTool, ProjectConfigurationInfo_CPP configurationInfo)
         {
-            // Warning level...
+            // Compile without link
+            configurationInfo.addCompilerFlag("/c");
+
+            #region General
+            // - Resolve #using Reference (TODO)
+
+            // - Debug Information format
+            configurationInfo.addCompilerFlag("/Z7"); //< Make debug info always is /Z7
+
+            // - Common Language RunTime Support (TODO)
+
+            // - Suppress Startup Banner
+            bool supressStartupBanner = Utils.call(() => (compilerTool.SuppressStartupBanner));
+            if (supressStartupBanner)
+            {
+                configurationInfo.addCompilerFlag("/nologo");
+            }
+
+            // - Warning Level
             warningLevelOption warningLevel = Utils.call(() => (compilerTool.WarningLevel));
             switch (warningLevel)
             {
                 case warningLevelOption.warningLevel_0:
-                    configurationInfo.addCompilerFlag("-w");
+                    configurationInfo.addCompilerFlag("/W0");
+                    break;
+
+                case warningLevelOption.warningLevel_1:
+                    configurationInfo.addCompilerFlag("/W1");
+                    break;
+
+                case warningLevelOption.warningLevel_2:
+                    configurationInfo.addCompilerFlag("/W2");
+                    break;
+
+                case warningLevelOption.warningLevel_3:
+                    configurationInfo.addCompilerFlag("/W3");
                     break;
 
                 case warningLevelOption.warningLevel_4:
-                    configurationInfo.addCompilerFlag("-Wall");
+                    configurationInfo.addCompilerFlag("/W4");
                     break;
             }
 
-            // Warnings as errors...
+            // - Treat Warnings As Error
             bool warningsAsErrors = Utils.call(() => (compilerTool.WarnAsError));
             if (warningsAsErrors == true)
             {
-                configurationInfo.addCompilerFlag("-Werror");
+                configurationInfo.addCompilerFlag("/WX");
             }
 
-            // Optimization...
-            optimizeOption optimization = Utils.call(() => (compilerTool.Optimization));
-            switch (optimization)
+            // - Multi-processor Compilation (TODO)
+            // - Use Unicode For Assembler Listing (TODO)
+
+            #endregion
+
+            #region Optimization:
+            // - Optimization
+            optimizeOption optimize = Utils.call(() => (compilerTool.Optimization));
+            switch (optimize)
             {
                 case optimizeOption.optimizeDisabled:
-                    configurationInfo.addCompilerFlag("-O0");
-                    break;
-
-                case optimizeOption.optimizeMinSpace:
-                    configurationInfo.addCompilerFlag("-Os");
-                    break;
-
-                case optimizeOption.optimizeMaxSpeed:
-                    configurationInfo.addCompilerFlag("-O2");
+                    configurationInfo.addCompilerFlag("/Od");
                     break;
 
                 case optimizeOption.optimizeFull:
-                    configurationInfo.addCompilerFlag("-O3");
+                    configurationInfo.addCompilerFlag("/Ox");
+                    break;
+
+                case optimizeOption.optimizeMinSpace:
+                    configurationInfo.addCompilerFlag("/O1");
+                    break;
+
+                case optimizeOption.optimizeMaxSpeed:
+                    configurationInfo.addCompilerFlag("/O2");
                     break;
             }
+
+            // - Inline Function Expansion
+            inlineExpansionOption inlineExpansion = Utils.call(() => (compilerTool.InlineFunctionExpansion));
+            switch (inlineExpansion)
+            {
+                case inlineExpansionOption.expandAnySuitable:
+                    configurationInfo.addCompilerFlag("/Ob2");
+                    break;
+
+                case inlineExpansionOption.expandOnlyInline:
+                    configurationInfo.addCompilerFlag("/Ob1");
+                    break;
+            }
+
+            // - Enable Intrinsic Functions
+            bool enableIntrinsic = Utils.call(() => (compilerTool.EnableIntrinsicFunctions));
+            if (enableIntrinsic)
+            {
+                configurationInfo.addCompilerFlag("/Oi");
+            }
+
+            // - Favor Size Or Speed
+            favorSizeOrSpeedOption favorSizeOrSpeed = Utils.call(() => (compilerTool.FavorSizeOrSpeed));
+            switch (favorSizeOrSpeed)
+            {
+                case favorSizeOrSpeedOption.favorSize:
+                    configurationInfo.addCompilerFlag("/Os");
+                    break;
+
+                case favorSizeOrSpeedOption.favorSpeed:
+                    configurationInfo.addCompilerFlag("/Ot");
+                    break;
+            }
+
+            // - Omit Frame Pointers (TODO)
+
+            // - Enable Fiber-Safe Optimizations
+            bool enableFiberSafe = Utils.call(() => (compilerTool.EnableFiberSafeOptimizations));
+            if (enableFiberSafe)
+            {
+                configurationInfo.addCompilerFlag("/GT");
+            }
+
+            // - Whole Program Optimization
+            bool wholeProgramOptimization = Utils.call(() => (compilerTool.WholeProgramOptimization));
+            if (wholeProgramOptimization)
+            {
+                configurationInfo.addCompilerFlag("/GL");
+            }
+            #endregion
+
+            #region Code Generation:
+            // - Enable String Pooling (TODO)
+
+            // - Enable Minimal Rebuild
+            bool enableMinimalRebuild = Utils.call(() => (compilerTool.MinimalRebuild));
+            if (enableMinimalRebuild)
+            {
+                configurationInfo.addCompilerFlag("/Gm");
+            }
+            else
+            {
+                configurationInfo.addCompilerFlag("/Gm-");
+            }
+
+            // - Enable C++ Exceptions
+            cppExceptionHandling cppException = Utils.call(() => (compilerTool.ExceptionHandling));
+            switch (cppException)
+            {
+                case cppExceptionHandling.cppExceptionHandlingYes:
+                    configurationInfo.addCompilerFlag("/EHsc");
+                    break;
+
+                case cppExceptionHandling.cppExceptionHandlingYesWithSEH:
+                    configurationInfo.addCompilerFlag("/EHa");
+                    break;
+            }
+
+            // - Smaller Type Check (TODO)
+            
+            // - Basic Runtime Checks
+            basicRuntimeCheckOption basicRuntimeCheck = Utils.call(() => (compilerTool.BasicRuntimeChecks));
+            switch (basicRuntimeCheck)
+            {
+                case basicRuntimeCheckOption.runtimeBasicCheckAll:
+                    configurationInfo.addCompilerFlag("/RTC1");
+                    break;
+
+                case basicRuntimeCheckOption.runtimeCheckStackFrame:
+                    configurationInfo.addCompilerFlag("/RTCs");
+                    break;
+
+                case basicRuntimeCheckOption.runtimeCheckUninitVariables:
+                    configurationInfo.addCompilerFlag("/RTCu");
+                    break;
+            }
+
+            // - Runtime Library
+            runtimeLibraryOption runtimeLibrary = Utils.call(() => (compilerTool.RuntimeLibrary));
+            switch (runtimeLibrary)
+            {
+                case runtimeLibraryOption.rtMultiThreaded:
+                    configurationInfo.addCompilerFlag("/MT");
+                    break;
+
+                case runtimeLibraryOption.rtMultiThreadedDebug:
+                    configurationInfo.addCompilerFlag("/MTd");
+                    break;
+
+                case runtimeLibraryOption.rtMultiThreadedDebugDLL:
+                    configurationInfo.addCompilerFlag("/MDd");
+                    break;
+
+                case runtimeLibraryOption.rtMultiThreadedDLL:
+                    configurationInfo.addCompilerFlag("/MD");
+                    break;
+            }
+
+            // - Struct Member Alignment (TODO)
+
+            // - Buffer Security Check
+            bool bufferSecurityCheck = Utils.call(() => (compilerTool.BufferSecurityCheck));
+            if (bufferSecurityCheck)
+            {
+                configurationInfo.addCompilerFlag("/GS");
+            }
+
+            // - Enable Function-Level Linking
+            bool functionLevelLink = Utils.call(() => (compilerTool.EnableFunctionLevelLinking));
+            if (functionLevelLink)
+            {
+                configurationInfo.addCompilerFlag("/Gy");
+            }
+
+            // - Enable Enhanced Instruction Set
+            enhancedInstructionSetType enhancedInstruction = Utils.call(() => (compilerTool.EnableEnhancedInstructionSet)); ;
+            switch (enhancedInstruction)
+            {
+                case enhancedInstructionSetType.enhancedInstructionSetTypeSIMD:
+                    configurationInfo.addCompilerFlag("/arch:SSE");
+                    break;
+
+                case enhancedInstructionSetType.enhancedInstructionSetTypeSIMD2:
+                    configurationInfo.addCompilerFlag("/arch:SSE2");
+                    break;
+            }
+
+            // - Floating Point Model
+            floatingPointModel floatingPoint = Utils.call(() => (compilerTool.floatingPointModel));
+            switch (floatingPoint)
+            {
+                case floatingPointModel.FloatingPointFast:
+                    configurationInfo.addCompilerFlag("/fp:fast");
+                    break;
+
+                case floatingPointModel.FloatingPointPrecise:
+                    configurationInfo.addCompilerFlag("/fp:precise");
+                    break;
+
+                case floatingPointModel.FloatingPointStrict:
+                    configurationInfo.addCompilerFlag("/fp:strict");
+                    break;
+            }
+
+            // - Enable Floating Point Exceptions (TODO)
+
+            // - Create Hotpatchable Image (TODO)
+            
+            #endregion
+
+            #region Language
+            // - Disable Language Extensions
+            bool disableLanguageExtensions = Utils.call(() => (compilerTool.DisableLanguageExtensions));
+            if (disableLanguageExtensions)
+            {
+                configurationInfo.addCompilerFlag("/Za");
+            }
+
+            // - Treat WChar_t As Built in Type
+            bool treatWChar_tAsBuildInType = Utils.call(() => (compilerTool.TreatWChar_tAsBuiltInType));
+            if (treatWChar_tAsBuildInType)
+            {
+                configurationInfo.addCompilerFlag("/Zc:wchar_t");
+            }
+            else
+            {
+                configurationInfo.addCompilerFlag("/Zc:wchar_t-");
+            }
+            
+            // - Force Conformance in For Loop Scope
+            bool forceConformance = Utils.call(() => (compilerTool.ForceConformanceInForLoopScope));
+            if (forceConformance)
+            {
+                configurationInfo.addCompilerFlag("/Zc:forScope");
+            }
+            else
+            {
+                configurationInfo.addCompilerFlag("/Zc:forScope-");
+            }
+            
+            // - Enable Run-Time Type Information (TODO)
+            
+            // - Open MP Support
+            bool openMpSupport = Utils.call(() => (compilerTool.OpenMP));
+            if (openMpSupport)
+            {
+                configurationInfo.addCompilerFlag("/openmp");
+            }
+            #endregion
+
+
+            #region Advance
+            // - Calling Convention
+            callingConventionOption callingConvention = Utils.call(() => (compilerTool.CallingConvention));
+            switch (callingConvention)
+            {
+                case callingConventionOption.callConventionCDecl:
+                    configurationInfo.addCompilerFlag("/Gd");
+                    break;
+
+                case callingConventionOption.callConventionFastCall:
+                    configurationInfo.addCompilerFlag("/Gr");
+                    break;
+
+                case callingConventionOption.callConventionStdCall:
+                    configurationInfo.addCompilerFlag("/Gz");
+                    break;
+            }
+
+            // - Compile As (TODO)
+
+            // - Disable Specific Warnings
+            string disableSpecificWarnings = Utils.call(() => (compilerTool.DisableSpecificWarnings));
+            if (!string.IsNullOrEmpty(disableSpecificWarnings))
+            {
+                List<string> disableSpecificWarningsList = Utils.split(disableSpecificWarnings, ';');
+                foreach (string warning in disableSpecificWarningsList)
+                {
+                    int number;
+                    if (Int32.TryParse(warning, out number))
+                    {
+                        configurationInfo.addCompilerFlag("/wd" + warning);
+                    }
+                }
+            }
+
+            // - Forced Include File (TODO)
+            // - Forced #using File
+            // - Show Includes
+            // - Use Full Paths
+            // - Omit Default Library Name
+
+            // - Internal Compiler Error Reporting
+            compilerErrorReportingType compilerErrorReporting = Utils.call(() => (compilerTool.ErrorReporting));
+            switch (compilerErrorReporting)
+            {
+                case compilerErrorReportingType.compilerErrorReportingPrompt:
+                    configurationInfo.addCompilerFlag("/errorReport:prompt");
+                    break;
+
+                case compilerErrorReportingType.compilerErrorReportingQueue:
+                    configurationInfo.addCompilerFlag("/errorReport:queue");
+                    break;
+            }
+            
+            // - Treat Specific Warnings As Errors (TODO)
+            #endregion
         }
 
         /// <summary>
@@ -449,6 +895,9 @@ namespace SolutionParser_VS2010
                 case ConfigurationTypes.typeDynamicLibrary:
                     result = ProjectInfo.ProjectTypeEnum.CPP_DLL;
                     break;
+
+                default:
+                    throw new Exception("INVALID ProjectType, only support CPP_EXECUTABLE, CPP_STATIC_LIBRARY, CPP_DLL");
             }
 
             return result;

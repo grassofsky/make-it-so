@@ -1,0 +1,81 @@
+@startuml
+class SolutionInfo {
+    +void addProjectInfo(string projectName, ProjectInfo project)
+    +List<ProjectInfo> getProjectInfos()
+    +void addRequiredProjectToProject(string projectName, string requiredProjectName)
+    +void setupImplicitLinking()
+    +void setupReferences()
+    +ProjectInfo.ProjectTypeEnum isOutputObject(string absoluteExecutablePath)
+}
+
+class ProjectInfo {
+    {abstract} +ProjectInfo.ProjectTypeEnum isOutputObject(string absoluteExecutablePath)
+    +void addRequiredPrject(ProjectInfo project)
+    +HashSet<ProjectInfo> getRequiredProjects()
+
+    +string Name 
+    +SolutionInfo ParentSolution
+    +ProjectTypeEnum ProjectType
+    +string RootFolderAbsolute
+}
+
+class ProjectInfo_CPP {
+    +void addFile(string file)
+    +HashSet<string> getFiles()
+    +void setupImplicitLinking()
+    +void addConfigurationInfo(ProjectConfigurationInfo_CPP configurationInfo)
+    +List<ProjectConfigurationInfo_CPP> getConfigurationInfos()
+    +void addCustomBuildRuleInfo(CustomBuildRuleInfo_CPP ruleInfo, string configurationName)
+    +ProjectInfo.ProjectTypeEnum isOutputObject(string absoluteExecutablePath)
+
+    +bool LinkLibraryDependencies
+}
+
+class ProjectConfigurationInfo_CPP {
+    +void addIncludePath(string path)
+    +void removeIncludePath(string path)
+    +List<string> getLibraryPaths()
+    +void addLibraryPath(string path)
+    +void removeLibraryPath(string path)
+    +HashSet<string> getLibraryRawNames()
+    +void addLibraryRawName(string rawName)
+    +void removeLibraryRawName(string rawName)
+    +HashSet<string> getPreprocessorDefinitions()
+    +void addPreprocessorDefinition(string definition)
+    +void removePreprocessorDefinition(string definition)
+    +HashSet<string> getImplicityLinkedObjectFiles()
+    +void addImplicitlyLinkedObjectFile(string objectFile)
+    +void addCompilerFlag(string flag)
+    +void removeCompilerFlag(string flag)
+    +HashSet<string> getCompilerFlags()
+    +void addCustomBuildRuleInfo(CustomBuildRuleInfo_CPP ruleInfo)
+    +List<CustomBuildRuleInfo_CPP> getCustomBuildRuleInfos()
+
+    +ProjectInfo_CPP ParentProjectInfo
+    +string Name 
+    +string IntermediateFolder 
+    +string IntermediateFolderAbsolute
+    +string OutputFolder
+    +string OutputFolderAbsolute
+    +CharacterSet CharacterSet
+    +string PreBuildEvent
+    +string PostBuildEvent
+}
+
+class SolutionParserBase {
+    {abstract} +void parse(string solutionFilename)
+    +void updateSolutionFromConfig()
+
+    +SolutionInfo ParsedSolution
+}
+
+class SolutionParser {
+    +void parse(string solutionFilename)
+}
+
+ProjectInfo <|-- ProjectInfo_CPP
+ProjectInfo *-- SolutionInfo
+ProjectConfigurationInfo_CPP *-- ProjectInfo_CPP
+
+
+@enduml

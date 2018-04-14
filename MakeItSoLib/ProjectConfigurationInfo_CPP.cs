@@ -71,6 +71,15 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// Gets or sets the output path for dynamic lib, relative to the project's root folder.
+        /// </summary>
+        public string DynamicLibOutputPath
+        {
+            get { return m_dynamicLibOutputPath; }
+            set { m_dynamicLibOutputPath = value.Replace(" ", ""); }
+        }
+
+        /// <summary>
         /// Returns the absolute path to the output folder.
         /// </summary>
         public string OutputFolderAbsolute
@@ -240,6 +249,30 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// Adds a link flag
+        /// </summary>
+        public void addLinkFlag(string flag)
+        {
+            m_linkFlags.Add(flag);
+        }
+
+        /// <summary>
+        /// Removes the link flag passed from the collection we're managing.
+        /// </summary>
+        public void removeLinkFlag(string flag)
+        {
+            m_linkFlags.Remove(flag);
+        }
+
+        /// <summary>
+        /// Gets the collection of link flags
+        /// </summary>
+        public HashSet<string> getLinkFlags()
+        {
+            return m_linkFlags;
+        }
+
+        /// <summary>
         /// Adds info about a custom build rule (for one file) to this
         /// configuration.
         /// </summary>
@@ -289,6 +322,9 @@ namespace MakeItSoLib
 
         // The output folder for built objects such as libraries and executables...
         private string m_outputFolder = "";
+
+        // The output path for dynamic libraries lib
+        private string m_dynamicLibOutputPath = "";
         
         // The collection of include paths. (These are a list, as the order
         // may be important.)
@@ -311,6 +347,9 @@ namespace MakeItSoLib
 
         // The collection of compliler flags...
         private HashSet<string> m_compilerFlags = new HashSet<string>();
+
+        // The collection of link flags...
+        private HashSet<string> m_linkFlags = new HashSet<string>();
 
         // The collection of custom build rules for this configuration...
         private List<CustomBuildRuleInfo_CPP> m_customBuildRuleInfos = new List<CustomBuildRuleInfo_CPP>();

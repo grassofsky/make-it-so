@@ -322,7 +322,7 @@ namespace SolutionParser_VS2008
         /// </summary>
         private string convertBuildEventCommandLine(string commandLine)
         {
-            if (commandLine == null)
+            if (String.IsNullOrEmpty(commandLine))
             {
                 return "";
             }
@@ -617,6 +617,9 @@ namespace SolutionParser_VS2008
                 case ConfigurationTypes.typeDynamicLibrary:
                     result = ProjectInfo.ProjectTypeEnum.CPP_DLL;
                     break;
+
+                 default:
+                    throw new Exception("INVALID ProjectType, only support CPP_EXECUTABLE, CPP_STATIC_LIBRARY, CPP_DLL");
             }
 
             return result;

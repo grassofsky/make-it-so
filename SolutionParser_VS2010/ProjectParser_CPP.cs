@@ -204,6 +204,9 @@ namespace SolutionParser_VS2010
             // We find if this library is set to link together other libraries it depends on...
             // (We are assuming that all configurations of the project have the same link-library-dependencies setting.)
             m_projectInfo.LinkLibraryDependencies = Utils.call(() => (librarianTool.LinkLibraryDependencies));
+
+            // - Import Library
+            configurationInfo.DynamicLibOutputPath = configurationInfo.OutputFolder + m_projectInfo.Name + ".lib";
         }
 
         /// <summary>
@@ -238,11 +241,11 @@ namespace SolutionParser_VS2010
             switch (linkIncremental)
             {
                 case linkIncrementalType.linkIncrementalYes:
-                    configurationInfo.addLinkFlag("/INCREMENTAL");
+                    configurationInfo.addLinkerFlag("/INCREMENTAL");
                     break;
 
                 case linkIncrementalType.linkIncrementalNo:
-                    configurationInfo.addLinkFlag("/INCREMENTAL:NO");
+                    configurationInfo.addLinkerFlag("/INCREMENTAL:NO");
                     break;
             }
 
@@ -250,7 +253,7 @@ namespace SolutionParser_VS2010
             bool suppressStartupBanner = Utils.call(() => (linkerTool.SuppressStartupBanner));
             if (suppressStartupBanner)
             {
-                configurationInfo.addLinkFlag("/NOLOGO");
+                configurationInfo.addLinkerFlag("/NOLOGO");
             }
             
             // - Link Library Dependencies
@@ -263,7 +266,7 @@ namespace SolutionParser_VS2010
 
             #region Manifest file
             // Disable manifest file
-            configurationInfo.addLinkFlag("/MANIFEST:NO");
+            configurationInfo.addLinkerFlag("/MANIFEST:NO");
             #endregion
 
             #region Debugging
@@ -271,7 +274,7 @@ namespace SolutionParser_VS2010
             bool debugInfo = Utils.call(() => (linkerTool.GenerateDebugInformation));
             if (debugInfo == true)
             {
-                configurationInfo.addLinkFlag("/DEBUG");
+                configurationInfo.addLinkerFlag("/DEBUG");
             }
             #endregion
 
@@ -281,11 +284,11 @@ namespace SolutionParser_VS2010
             switch (reference)
             {
                 case optRefType.optReferences:
-                    configurationInfo.addLinkFlag("/OPT:REF");
+                    configurationInfo.addLinkerFlag("/OPT:REF");
                     break;
                     
                 case optRefType.optReferencesDefault:
-                    configurationInfo.addLinkFlag("/OPT:NOREF");
+                    configurationInfo.addLinkerFlag("/OPT:NOREF");
                     break;
             }
 
@@ -294,11 +297,11 @@ namespace SolutionParser_VS2010
             switch (foldingType)
             {
                 case optFoldingType.optFolding:
-                    configurationInfo.addLinkFlag("/OPT:ICF");
+                    configurationInfo.addLinkerFlag("/OPT:ICF");
                     break;
 
                 case optFoldingType.optNoFolding:
-                    configurationInfo.addLinkFlag("/OPT:NOICF");
+                    configurationInfo.addLinkerFlag("/OPT:NOICF");
                     break;
             }
 
@@ -307,19 +310,19 @@ namespace SolutionParser_VS2010
             switch (linkTImeCodeGeneration)
             {
                 case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionUse:
-                    configurationInfo.addLinkFlag("/LTCG");
+                    configurationInfo.addLinkerFlag("/LTCG");
                     break;
 
                 case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionInstrument:
-                    configurationInfo.addLinkFlag("/LTCG:PGInstrument");
+                    configurationInfo.addLinkerFlag("/LTCG:PGInstrument");
                     break;
 
                 case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionOptimize:
-                    configurationInfo.addLinkFlag("/LTCG:PGOptimize");
+                    configurationInfo.addLinkerFlag("/LTCG:PGOptimize");
                     break;
 
                 case LinkTimeCodeGenerationOption.LinkTimeCodeGenerationOptionUpdate:
-                    configurationInfo.addLinkFlag("/LTCG:PGUpdate");
+                    configurationInfo.addLinkerFlag("/LTCG:PGUpdate");
                     break;
             }
             #endregion
@@ -330,11 +333,11 @@ namespace SolutionParser_VS2010
             switch (randomizeBaseAddress)
             {
                 case enumRandomizedBaseAddressBOOL.RandomizedBaseAddressYes:
-                    configurationInfo.addLinkFlag("/DYNAMICBASE");
+                    configurationInfo.addLinkerFlag("/DYNAMICBASE");
                     break;
 
                 case enumRandomizedBaseAddressBOOL.RandomizedBaseAddressNo:
-                    configurationInfo.addLinkFlag("/DYNAMICBASE:NO");
+                    configurationInfo.addLinkerFlag("/DYNAMICBASE:NO");
                     break;
             }
 
@@ -343,35 +346,30 @@ namespace SolutionParser_VS2010
             switch (dataExecutionPrevention)
             {
                 case enumDataExecutionPreventionBOOL.DataExecutionPreventionYes:
-                    configurationInfo.addLinkFlag("/NXCOMPAT");
+                    configurationInfo.addLinkerFlag("/NXCOMPAT");
                     break;
 
                 case enumDataExecutionPreventionBOOL.DataExecutionPreventionNo:
-                    configurationInfo.addLinkFlag("/NXCOMPAT:NO");
+                    configurationInfo.addLinkerFlag("/NXCOMPAT:NO");
                     break;
             }
             
             // - Import Library
             string dynamicLibOutputPath = Utils.call(() => (linkerTool.ImportLibrary));
-            if (string.IsNullOrEmpty(dynamicLibOutputPath))
-            {
-                configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (configurationInfo.OutputFolder+"${TargetName}.lib"));
-            }
-            else
-            {
-                configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (dynamicLibOutputPath));
-            }
+            configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (dynamicLibOutputPath));
 
             // - Target Machine (TODO: complete the machine type)
             machineTypeOption machineType = Utils.call(() => (linkerTool.TargetMachine));
             switch (machineType)
             {
                 case machineTypeOption.machineAMD64:
-                    configurationInfo.addLinkFlag("/MACHINE:X64");
+                    configurationInfo.addLinkerFlag("/MACHINE:X64");
+                    configurationInfo.Platform = "x64";
                     break;
 
                 case machineTypeOption.machineX86:
-                    configurationInfo.addLinkFlag("/MACHINE:X86");
+                    configurationInfo.addLinkerFlag("/MACHINE:X86");
+                    configurationInfo.Platform = "x86";
                     break;
             }
             
@@ -380,11 +378,11 @@ namespace SolutionParser_VS2010
             switch (errorReportType)
             {
                 case linkerErrorReportingType.linkerErrorReportingPrompt:
-                    configurationInfo.addLinkFlag("/ERRORREPORT:PROMT");
+                    configurationInfo.addLinkerFlag("/ERRORREPORT:PROMT");
                     break;
 
                 case linkerErrorReportingType.linkerErrorReportingQueue:
-                    configurationInfo.addLinkFlag("/ERRORREPORT:QUEUE");
+                    configurationInfo.addLinkerFlag("/ERRORREPORT:QUEUE");
                     break;
             }
             #endregion

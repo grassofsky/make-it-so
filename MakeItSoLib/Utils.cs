@@ -267,7 +267,7 @@ namespace MakeItSoLib
                 if (isFirst)
                     isFirst = false;
                 else
-                    sb.Append(" ");
+                    sb.Append(delimiter);
                 sb.Append(item);                
             }
             return sb.ToString();

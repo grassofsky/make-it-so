@@ -67,7 +67,7 @@ namespace MakeItSo
 
                 // We create the makefile...
                 Log.log("Creating makefile...");
-                MakefileBuilder.createMakefile(parser.ParsedSolution);
+                ConfigureFileBuilder.createConfigurationFile(parser.ParsedSolution, ConfigureFileBuilder.ConfigureFileType.Fastbuild);
                 Log.log("Creating makefile succeeded.");
             }
             catch (Exception ex)

@@ -41,6 +41,24 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// The configuration's platform name
+        /// Note that we strip out any spaces in the configuration name.
+        /// </summary>
+        public string Platform
+        {
+            get { return m_platform; }
+            set { m_platform = value.Replace(" ", ""); }
+        }
+
+        /// <summary>
+        /// Target Name
+        /// </summary>
+        public string TargetName
+        {
+            get { return m_parentProjectInfo != null ? m_parentProjectInfo.Name + "-" + m_platform + "-" + m_name : m_platform + "-" + m_name; }
+        }
+
+        /// <summary>
         /// Gets or sets the intermediate folder, relative to the project's
         /// root folder.
         /// </summary><remarks>
@@ -251,25 +269,25 @@ namespace MakeItSoLib
         /// <summary>
         /// Adds a link flag
         /// </summary>
-        public void addLinkFlag(string flag)
+        public void addLinkerFlag(string flag)
         {
-            m_linkFlags.Add(flag);
+            m_linkerFlags.Add(flag);
         }
 
         /// <summary>
         /// Removes the link flag passed from the collection we're managing.
         /// </summary>
-        public void removeLinkFlag(string flag)
+        public void removeLinkerFlag(string flag)
         {
-            m_linkFlags.Remove(flag);
+            m_linkerFlags.Remove(flag);
         }
 
         /// <summary>
         /// Gets the collection of link flags
         /// </summary>
-        public HashSet<string> getLinkFlags()
+        public HashSet<string> getLinkerFlags()
         {
-            return m_linkFlags;
+            return m_linkerFlags;
         }
 
         /// <summary>
@@ -282,7 +300,7 @@ namespace MakeItSoLib
         }
 
         /// <summary>
-        /// Returns the ollection of custom build rules for this configuration.
+        /// Returns the collection of custom build rules for this configuration.
         /// </summary>
         public List<CustomBuildRuleInfo_CPP> getCustomBuildRuleInfos()
         {
@@ -313,6 +331,9 @@ namespace MakeItSoLib
 
         // The configuration name, e.g. 'Debug'
         private string m_name = "";
+
+        // The platform name, 'x64' or 'x86', default is 'x86'
+        private string m_platform = "x86";
 
         // The project that this configuration is part of...
         private ProjectInfo_CPP m_parentProjectInfo = null;
@@ -349,7 +370,7 @@ namespace MakeItSoLib
         private HashSet<string> m_compilerFlags = new HashSet<string>();
 
         // The collection of link flags...
-        private HashSet<string> m_linkFlags = new HashSet<string>();
+        private HashSet<string> m_linkerFlags = new HashSet<string>();
 
         // The collection of custom build rules for this configuration...
         private List<CustomBuildRuleInfo_CPP> m_customBuildRuleInfos = new List<CustomBuildRuleInfo_CPP>();

@@ -9,4 +9,4 @@ It will convert all projects in a solution and create a configure file for each 
 
 # Other Information
 
-See original [readme](https://github.com/stupidgrass/make-it-so/README_original.markdown)
+See original [readme](https://github.com/stupidgrass/make-it-so/blob/master/README_original.markdown)

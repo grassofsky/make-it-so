@@ -60,7 +60,7 @@ namespace MakeItSo
         {
             try
             {
-                string path = m_solution.RootFolderAbsolute + "/fbuild.bff";
+                string path = m_solution.RootFolderAbsolute + "/" + m_solution.Name + ".bff";
                 m_file = new StreamWriter(path, false);
                 m_file.NewLine = "\n";
 

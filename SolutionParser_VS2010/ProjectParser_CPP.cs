@@ -205,8 +205,17 @@ namespace SolutionParser_VS2010
             // (We are assuming that all configurations of the project have the same link-library-dependencies setting.)
             m_projectInfo.LinkLibraryDependencies = Utils.call(() => (librarianTool.LinkLibraryDependencies));
 
+            // - Target Machine (TODO: complete the machine type)
+
+            string platform = Utils.call(() => (vcConfiguration.Evaluate("$(Platform)")));
+            if (!string.IsNullOrEmpty(platform))
+            {
+                configurationInfo.Platform = platform;
+                configurationInfo.addLinkerFlag("/MACHINE:X64");
+            }
+
             // - Import Library
-            configurationInfo.DynamicLibOutputPath = configurationInfo.OutputFolder + m_projectInfo.Name + ".lib";
+            configurationInfo.DynamicLibOutputPath = configurationInfo.OutputFolderAbsolute + m_projectInfo.Name + ".lib";
         }
 
         /// <summary>
@@ -356,7 +365,7 @@ namespace SolutionParser_VS2010
             
             // - Import Library
             string dynamicLibOutputPath = Utils.call(() => (linkerTool.ImportLibrary));
-            configurationInfo.DynamicLibOutputPath = parseConfiguration_Folder(vcConfiguration, () => (dynamicLibOutputPath));
+            configurationInfo.DynamicLibOutputPath = m_projectInfo.RootFolderAbsolute + parseConfiguration_Folder(vcConfiguration, () => (dynamicLibOutputPath));
 
             // - Target Machine (TODO: complete the machine type)
             machineTypeOption machineType = Utils.call(() => (linkerTool.TargetMachine));

@@ -103,8 +103,8 @@ namespace MakeItSoLib
             MakeItSoConfig_Project projectSettings = MakeItSoConfig.Instance.getProjectConfig(configuration.ParentProjectInfo.Name);
 
             // By default we replace WIN32 with GCC_BUILD...
-            configuration.removePreprocessorDefinition("WIN32");
-            configuration.addPreprocessorDefinition("GCC_BUILD");
+            //configuration.removePreprocessorDefinition("WIN32");
+            //configuration.addPreprocessorDefinition("GCC_BUILD");
 
             // We check if any definitions should be removed...
             List<string> definitions = new List<string>(configuration.getPreprocessorDefinitions());

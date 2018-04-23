@@ -151,8 +151,9 @@ namespace MakeItSo
                 string variableName = getIncludePathVariableName(configuration);
 
                 // Prepare include paths
+                // All paths should be absolute path
                 var includePaths = configuration.getIncludePaths().Select(
-                        path => String.Format("/I{0}", Utils.quote(path))
+                    path => String.Format("/I{0}", Utils.quote(generateFullPath(path)))
                     ).ToList();
 
                 // We write the variable...
@@ -176,7 +177,7 @@ namespace MakeItSo
 
                 // The library path...
                 var libraryPaths = configuration.getLibraryPaths().Select(
-                        path => String.Format("/LIBPATH:{0}", Utils.quote(path))
+                        path => String.Format("/LIBPATH:{0}", Utils.quote(generateFullPath(path)))
                     );
 
                 // We write the variable...
@@ -329,7 +330,7 @@ namespace MakeItSo
                 m_file.WriteLine("ObjectList('" + configurationInfo.TargetName + "-objs')");
                 m_file.WriteLine("{");
                 m_file.WriteLine("  Using( ." + configurationInfo.Platform + "BaseConfig )");
-                m_file.WriteLine("  .CompilerInputPath  = '" + m_projectInfo.RootFolderRelative + "'");
+                m_file.WriteLine("  .CompilerInputPath  = '" + m_projectInfo.RootFolderAbsolute + "'");
                 m_file.WriteLine("  .CompilerOutputPath = '" + configurationInfo.IntermediateFolderAbsolute + "'");
                 m_file.WriteLine("  .CompilerOptions    + ." + getPreprocessorDefinitionsVariableName(configurationInfo));
                 m_file.WriteLine("                      + ." + getIncludePathVariableName(configurationInfo));
@@ -383,9 +384,9 @@ namespace MakeItSo
                 m_file.WriteLine("Library('" + configurationInfo.TargetName + "')");
                 m_file.WriteLine("{");
                 m_file.WriteLine("  Using( ." + configurationInfo.Platform + "BaseConfig )");
-                m_file.WriteLine("  .CompilerInputPath     = '" + m_projectInfo.RootFolderRelative + "'");
+                m_file.WriteLine("  .CompilerInputPath     = '" + m_projectInfo.RootFolderAbsolute + "'");
                 m_file.WriteLine("  .CompilerInputPattern  = { '*.cc', '*.cpp', '*.c' }");
-                m_file.WriteLine("  .CompilerOutputPath    = '" + configurationInfo.IntermediateFolder + "'");
+                m_file.WriteLine("  .CompilerOutputPath    = '" + configurationInfo.IntermediateFolderAbsolute + "'");
                 m_file.WriteLine("  .CompilerOptions       + ." + getPreprocessorDefinitionsVariableName(configurationInfo));
                 m_file.WriteLine("                         + ." + getIncludePathVariableName(configurationInfo));
                 m_file.WriteLine("                         + ." + getCompilerFlagsVariableName(configurationInfo));
@@ -449,6 +450,14 @@ namespace MakeItSo
         private string getLinkerFlagsVariableName(ProjectConfigurationInfo_CPP configuration)
         {
             return configuration.Name + "_" + configuration.Platform + "_Linker_Flags";
+        }
+
+        /// <summary>
+        /// Generate full path
+        /// </summary>
+        private string generateFullPath(string path)
+        {
+            return path.StartsWith(".") ? m_projectInfo.RootFolderAbsolute + path : path;
         }
 
         #endregion

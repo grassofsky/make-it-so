@@ -475,10 +475,12 @@ namespace MakeItSoLib
         private bool m_convertStaticLibraryToSharedObjects = false;
 
         // The prefix we add to output folders for C++ projects...
-        private string m_cppFolderPrefix = "gcc";
+        // gcc
+        private string m_cppFolderPrefix = "";
 
         // The prefix we add to output folders for C# projects...
-        private string m_csharpFolderPrefix = "mono";
+        // mono
+        private string m_csharpFolderPrefix = "";
 
         #endregion
     }

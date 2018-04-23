@@ -219,10 +219,10 @@ namespace MakeItSo
             m_file.WriteLine("  .Compiler        = 'Compiler-x64'");
             m_file.WriteLine("  .Librarian       = '$ToolsBasePath$\\lib.exe'");
             m_file.WriteLine("  .Linker          = '$ToolsBasePath$\\link.exe'");
-            m_file.WriteLine("  .LinkerOptions   + ' /LIBPATH:\"$VSBasePath$\\VC\\lib\"'");
-            m_file.WriteLine("                   + ' /LIBPATH:\"$VSBasePath$\\VC\\lib\\amd64\"'");
+            m_file.WriteLine("  .LinkerOptions   + ' /LIBPATH:\"$VSBasePath$\\VC\\lib\\amd64\"'");
+            m_file.WriteLine("                   + ' /LIBPATH:\"$VSBasePath$\\VC\\lib\"'");
             m_file.WriteLine("                   + ' /LIBPATH:\"$VSBasePath$\\VC\\atlmfc\\lib\\amd64\"'");
-            m_file.WriteLine("                   + ' /LIBPATH:\"$WindowsSDKBasePath$\\Lib\"'");
+            m_file.WriteLine("                   + ' /LIBPATH:\"$WindowsSDKBasePath$\\Lib\\x64\"'");
             m_file.WriteLine("]");
             m_file.WriteLine("");
         }

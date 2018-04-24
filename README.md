@@ -1,7 +1,7 @@
 # Overview
 MakeItSo converts Visual Studio solutions to:
 - gcc makefiles for Linux (TODO)
-- fastbuild configuration file (TODO)
+- fastbuild configuration file (DONE), should be improved.
 - CMake file (TODO)
 - Scons configure file (TODO)
 

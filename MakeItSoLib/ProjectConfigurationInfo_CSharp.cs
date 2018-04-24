@@ -44,6 +44,23 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// The platform's name
+        /// </summary>
+        public string Platform
+        {
+            get { return m_platform; }
+            set { m_platform = value; }
+        }
+
+        /// <summary>
+        /// Target Name
+        /// </summary>
+        public string TargetName
+        {
+            get { return m_parentProjectInfo != null ? m_parentProjectInfo.Name + "-" + m_platform + "-" + m_name : m_platform + "-" + m_name; }
+        }
+
+        /// <summary>
         /// Gets or sets whether to generate optimized code or not.
         /// </summary>
         public bool Optimize
@@ -239,6 +256,9 @@ namespace MakeItSoLib
 
         // The configuration name...
         private string m_name = "";
+
+        // The configuration platform
+        private string m_platform = "x86";
 
         // The parent project...
         private ProjectInfo_CSharp m_parentProjectInfo = null;

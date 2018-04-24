@@ -110,7 +110,7 @@ namespace MakeItSo
             }
             if (projectInfo is ProjectInfo_CSharp)
             {
-                //FastbuildFileBuilder_Project_CSharp.createConfigurationFile(projectInfo as ProjectInfo_CSharp);
+                FastbuildFileBuilder_Project_CSharp.createConfigurationFile(projectInfo as ProjectInfo_CSharp);
             }
         }
 
@@ -121,6 +121,7 @@ namespace MakeItSo
         {
             // TODO: add the variable to environment variable
             m_file.WriteLine(".VSBasePath         = 'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0'");
+            m_file.WriteLine(".CSBasePath         = 'C:\\Windows\\Microsoft.NET'");
             m_file.WriteLine(".WindowsSDKBasePath = 'C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.0A'");
             m_file.WriteLine("");
 
@@ -132,6 +133,26 @@ namespace MakeItSo
             m_file.WriteLine("     'SystemRoot=C:\\Windows'");
             m_file.WriteLine("  }");
             m_file.WriteLine("}");
+            m_file.WriteLine("");
+
+            m_file.WriteLine("// CSharp Compiler");
+            m_file.WriteLine(".MSCSBaseConfig =");
+            m_file.WriteLine("[");
+            m_file.WriteLine("  .CompilerOptions = ' /out:\"%2\"'");
+            m_file.WriteLine("                   + ' /reference:\"%3\"'");
+            m_file.WriteLine("]");
+            m_file.WriteLine("");
+            m_file.WriteLine(".csx86BaseConfig =");
+            m_file.WriteLine("[");
+            m_file.WriteLine("  Using( .MSCSBaseConfig )");
+            m_file.WriteLine("  .Compiler = '$CSBasePath$\\Framework\\v4.0.30319\\csc.exe'");
+            m_file.WriteLine("]");
+            m_file.WriteLine("");
+            m_file.WriteLine(".csx64BaseConfig =");
+            m_file.WriteLine("[");
+            m_file.WriteLine("  Using( .MSCSBaseConfig )");
+            m_file.WriteLine("  .Compiler = '$CSBasePath$\\Framework64\\v4.0.30319\\csc.exe'");
+            m_file.WriteLine("]");
             m_file.WriteLine("");
 
             m_file.WriteLine("// Compilers");
@@ -232,12 +253,46 @@ namespace MakeItSo
         /// </summary>
         private void createProjectTargets()
         {
+            /// Here the dependencies of the projects are considered.
+            List<string> sortedProjectName = new List<string>();
             foreach (ProjectInfo projectInfo in m_solution.getProjectInfos())
             {
                 if (projectInfo.ProjectType != ProjectInfo.ProjectTypeEnum.INVALID)
                 {
-                    m_file.WriteLine("#include \"" + projectInfo.RootFolderRelative + projectInfo.Name + ".bff\"");
+                    int maxIndex = -1;
+                    foreach (ProjectInfo requiredProject in projectInfo.getRequiredProjects().ToList())
+                    {
+                        string requiredName = requiredProject.RootFolderRelative + requiredProject.Name + ".bff";
+                        int index = sortedProjectName.FindIndex(item => item.Equals(requiredName));
+                        if (index == -1)
+                        {
+                            sortedProjectName.Add(requiredName);
+                            maxIndex = sortedProjectName.Count - 1;
+                        }
+                        else
+                        {
+                            maxIndex = Math.Max(maxIndex, index);
+                        }
+                    }
+
+                    string name = projectInfo.RootFolderRelative + projectInfo.Name + ".bff";
+                    if (sortedProjectName.FindIndex(item => item.Equals(name)) == -1)
+                    {
+                        if (maxIndex == -1)
+                        {
+                            sortedProjectName.Add(name);
+                        }
+                        else
+                        {
+                            sortedProjectName.Insert(maxIndex + 1, name);
+                        }
+                    }
                 }
+            }
+
+            foreach (string projectName in sortedProjectName)
+            {
+                m_file.WriteLine("#include \"" + projectName + "\"");
             }
             m_file.WriteLine("");
         }

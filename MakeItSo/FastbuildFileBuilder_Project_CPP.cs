@@ -400,7 +400,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the include-path variable name for the configuration passed in.
-        /// For example "Debug_Include_Path".
+        /// For example "Debug_x64_Include_Path".
         /// </summary>
         private string getIncludePathVariableName(ProjectConfigurationInfo_CPP configuration)
         {
@@ -409,7 +409,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the library-path variable name for the configuration passed in.
-        /// For example "Debug_Library_Path".
+        /// For example "Debug_x64_Library_Path".
         /// </summary>
         private string getLibraryPathVariableName(ProjectConfigurationInfo_CPP configuration)
         {
@@ -418,7 +418,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the libraries variable name for the configuration passed in.
-        /// For example "Debug_Libraries".
+        /// For example "Debug_x64_Libraries".
         /// </summary>
         private string getLibrariesVariableName(ProjectConfigurationInfo_CPP configuration)
         {
@@ -427,7 +427,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the preprocessor-definitions variable name for the configuration passed in.
-        /// For example "Debug_Preprocessor_Definitions".
+        /// For example "Debug_x64_Preprocessor_Definitions".
         /// </summary>
         private string getPreprocessorDefinitionsVariableName(ProjectConfigurationInfo_CPP configuration)
         {
@@ -436,7 +436,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the compiler-flags variable name for the configuration passed in.
-        /// For example "Debug_Compiler_Flags".
+        /// For example "Debug_x64_Compiler_Flags".
         /// </summary>
         private string getCompilerFlagsVariableName(ProjectConfigurationInfo_CPP configuration)
         {
@@ -445,7 +445,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the linker-flags variable name for the configuration passed in.
-        /// For example "Debug_Linker_Flags".
+        /// For example "Debug_x64_Linker_Flags".
         /// </summary>
         private string getLinkerFlagsVariableName(ProjectConfigurationInfo_CPP configuration)
         {

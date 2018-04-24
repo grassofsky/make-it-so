@@ -153,6 +153,7 @@ namespace SolutionParser_VS2010
             ProjectConfigurationInfo_CSharp configurationInfo = new ProjectConfigurationInfo_CSharp();
             configurationInfo.ParentProjectInfo = m_projectInfo;
             configurationInfo.Name = Utils.call(() => dteConfiguration.ConfigurationName);
+            configurationInfo.Platform = Utils.call(() => dteConfiguration.PlatformName);
 
             // We parse the configuration's properties, and set configuration
             // seetings from them...

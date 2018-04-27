@@ -874,7 +874,11 @@ namespace SolutionParser_VS2010
             // aren't relevant to a linux build)...
             foreach (string definition in preprocessorDefinitions)
             {
-                configurationInfo.addPreprocessorDefinition(definition);
+                // Ignore variable with $
+                if (definition.IndexOf("$") == -1)
+                {
+                    configurationInfo.addPreprocessorDefinition(definition);
+                }
             }
         }
 

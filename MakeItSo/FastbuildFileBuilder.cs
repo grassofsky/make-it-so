@@ -254,45 +254,38 @@ namespace MakeItSo
         private void createProjectTargets()
         {
             /// Here the dependencies of the projects are considered.
-            List<string> sortedProjectName = new List<string>();
+            /// Step 1. Store all project config path to ProjectPriority dictionary
             foreach (ProjectInfo projectInfo in m_solution.getProjectInfos())
             {
-                if (projectInfo.ProjectType != ProjectInfo.ProjectTypeEnum.INVALID)
+                if (projectInfo.ProjectType != ProjectInfo.ProjectTypeEnum.INVALID &&
+                    MakeItSoConfig.Instance.ignoreProject(projectInfo.Name) == false)
                 {
-                    int maxIndex = -1;
-                    foreach (ProjectInfo requiredProject in projectInfo.getRequiredProjects().ToList())
-                    {
-                        string requiredName = requiredProject.RootFolderRelative + requiredProject.Name + ".bff";
-                        int index = sortedProjectName.FindIndex(item => item.Equals(requiredName));
-                        if (index == -1)
-                        {
-                            sortedProjectName.Add(requiredName);
-                            maxIndex = sortedProjectName.Count - 1;
-                        }
-                        else
-                        {
-                            maxIndex = Math.Max(maxIndex, index);
-                        }
-                    }
+                    string configPath = projectInfo.RootFolderRelative + projectInfo.Name + ".bff";
+                    ProjectPriority.AddProjectPriority(configPath);
+                }
+            }
 
-                    string name = projectInfo.RootFolderRelative + projectInfo.Name + ".bff";
-                    if (sortedProjectName.FindIndex(item => item.Equals(name)) == -1)
+            /// Step 2. Add all dependencies of every project
+            foreach (ProjectInfo projectInfo in m_solution.getProjectInfos())
+            {
+                if (projectInfo.ProjectType != ProjectInfo.ProjectTypeEnum.INVALID &&
+                    MakeItSoConfig.Instance.ignoreProject(projectInfo.Name) == false)
+                {
+                    string configPath = projectInfo.RootFolderRelative + projectInfo.Name + ".bff";
+                    foreach (ProjectInfo depProjectInfo in projectInfo.getRequiredProjects())
                     {
-                        if (maxIndex == -1)
-                        {
-                            sortedProjectName.Add(name);
-                        }
-                        else
-                        {
-                            sortedProjectName.Insert(maxIndex + 1, name);
-                        }
+                        string depConfigPath = depProjectInfo.RootFolderRelative + depProjectInfo.Name + ".bff";
+                        ProjectPriority.AddDependency(configPath, depConfigPath);
                     }
                 }
             }
 
-            foreach (string projectName in sortedProjectName)
+            /// Step 3. Get all sorted project configuration file path
+            var sortedProjectConfigPath = ProjectPriority.GetSortedProjectConfigPath();
+
+            foreach (string configPath in sortedProjectConfigPath)
             {
-                m_file.WriteLine("#include \"" + projectName + "\"");
+                m_file.WriteLine("#include \"" + configPath + "\"");
             }
             m_file.WriteLine("");
         }
@@ -334,6 +327,113 @@ namespace MakeItSo
         #endregion
 
         #region Private data
+
+        private class ProjectPriorityManager
+        {
+
+
+        }
+
+        /// <summary>
+        /// To store project priority, this class is private in FastbuildFileBuilder
+        /// </summary>
+        private class ProjectPriority
+        {
+            #region Public 
+            /// <summary>
+            /// Initialize project priority dictionary
+            /// </summary>
+            /// <param name="name">project configuration path</param>
+            public static void AddProjectPriority(string name)
+            {
+                m_ProjDict.Add(name, new ProjectPriority(name));
+            }
+
+            /// <summary>
+            /// Add dependent project of source project
+            /// </summary>
+            /// <param name="configPath"></param>
+            /// <param name="depConfigPath"></param>
+            public static void AddDependency(string configPath, string depConfigPath)
+            {
+                m_ProjDict[configPath].addDependency(depConfigPath);
+            }
+
+            /// <summary>
+            /// Get the sorted project configuration path
+            /// </summary>
+            /// <returns></returns>
+            public static List<string> GetSortedProjectConfigPath()
+            {
+                List<ProjectPriority> projList = new List<ProjectPriority>();
+                foreach (KeyValuePair<string, ProjectPriority> entry in m_ProjDict)
+                {
+                    projList.Add(entry.Value);
+                }
+                projList.Sort((i1, i2) => (i2.m_priority.CompareTo(i1.m_priority)));
+
+                List<string> sortedList = new List<string>();
+                foreach (ProjectPriority proj in projList)
+                {
+                    sortedList.Add(proj.m_projectConfigPath);
+                }
+                return sortedList;
+            }
+
+            #endregion
+
+            #region Private function
+
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="name">Project configuration path</param>
+            private ProjectPriority(string name)
+            {
+                m_projectConfigPath = name;
+                m_priority = 0;
+            }
+
+            /// <summary>
+            /// Add the dependent project configuration path
+            /// </summary>
+            /// <param name="name"></param>
+            private void addDependency(string name)
+            {
+                dependences.Add(name);
+                m_ProjDict[name].increasePriority();
+            }
+
+            /// <summary>
+            /// Increase priority of the project
+            /// </summary>
+            private void increasePriority()
+            {
+                m_ProjDict[m_projectConfigPath].m_priority++;
+                foreach (string projConfigPath in dependences)
+                {
+                    Log.log(projConfigPath);
+                    m_ProjDict[projConfigPath].increasePriority();
+                }
+            }
+
+            #endregion
+
+            #region Private data
+            // Project configuration path
+            private string m_projectConfigPath;
+
+            // priority start from 0
+            private int m_priority;
+
+            // dependence project name
+            private List<string> dependences = new List<string>();
+
+            // Store all project
+            private static Dictionary<string, ProjectPriority> m_ProjDict = new Dictionary<string, ProjectPriority>();
+
+            #endregion
+        }
 
         // The parsed solution data.
         private SolutionInfo m_solution = null;

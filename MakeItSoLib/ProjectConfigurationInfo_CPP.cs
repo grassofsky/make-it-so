@@ -6,13 +6,6 @@ using System.IO;
 
 namespace MakeItSoLib
 {
-    public enum CharacterSet
-    {
-        NotSet,
-        Unicode,
-        MBCS
-    }
-
     /// <summary>
     /// Holds details about one configuration of a project,
     /// such as a release or debug build.
@@ -85,7 +78,15 @@ namespace MakeItSoLib
         public string OutputFolder
         {
             get { return m_outputFolder; }
-            set { m_outputFolder = value.Replace(" ", ""); }
+            set { 
+                m_outputFolder = value.Replace(" ", ""); 
+                // Fix outputFolder end with "\\"
+                if (m_outputFolder[m_outputFolder.Length-1] != '/' &&
+                    m_outputFolder[m_outputFolder.Length-1] != '\\')
+                {
+                    m_outputFolder = m_outputFolder + "\\";
+                }
+            }
         }
 
         /// <summary>
@@ -103,15 +104,6 @@ namespace MakeItSoLib
         public string OutputFolderAbsolute
         {
             get { return Path.Combine(ParentProjectInfo.RootFolderAbsolute, OutputFolder); }
-        }
-
-        /// <summary>
-        /// Gets or sets whether the project should be built with Unicode or MBCS charset.
-        /// </summary>
-        public CharacterSet CharacterSet
-        {
-            get;
-            set;
         }
 
         /// <summary>

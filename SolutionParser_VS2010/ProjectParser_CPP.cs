@@ -480,6 +480,9 @@ namespace SolutionParser_VS2010
             // Compile without link
             configurationInfo.addCompilerFlag("/c");
 
+            // Support big object file
+            configurationInfo.addCompilerFlag("/bigobj");
+
             #region General
             // - Resolve #using Reference (TODO)
 
@@ -880,6 +883,24 @@ namespace SolutionParser_VS2010
                     configurationInfo.addPreprocessorDefinition(definition);
                 }
             }
+
+            // Use of Mfc (TODO: improvement)
+            useOfMfc useMfc = Utils.call(() => (vcConfiguration.useOfMfc));
+            switch (useMfc)
+            {
+                case useOfMfc.useMfcDynamic:
+                    configurationInfo.addPreprocessorDefinition("_AFXDLL");
+                    break;
+            }
+
+            // Charset (TODO: improvement)
+            charSet characterSet = Utils.call(() => (vcConfiguration.CharacterSet));
+            switch (characterSet)
+            {
+                case charSet.charSetUnicode:
+                    configurationInfo.addPreprocessorDefinition("UNICODE");
+                    break;
+            }
         }
 
         /// <summary>
@@ -906,9 +927,6 @@ namespace SolutionParser_VS2010
                 case ConfigurationTypes.typeDynamicLibrary:
                     result = ProjectInfo.ProjectTypeEnum.CPP_DLL;
                     break;
-
-                default:
-                    throw new Exception("INVALID ProjectType, only support CPP_EXECUTABLE, CPP_STATIC_LIBRARY, CPP_DLL");
             }
 
             return result;

@@ -66,9 +66,9 @@ namespace MakeItSo
                 parser.updateSolutionFromConfig();
 
                 // We create the makefile...
-                Log.log("Creating makefile...");
+                Log.log("Creating configuration file...");
                 ConfigureFileBuilder.createConfigurationFile(parser.ParsedSolution, ConfigureFileBuilder.ConfigureFileType.Fastbuild);
-                Log.log("Creating makefile succeeded.");
+                Log.log("Creating configuration file succeeded.");
             }
             catch (Exception ex)
             {

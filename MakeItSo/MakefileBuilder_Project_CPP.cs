@@ -163,12 +163,6 @@ namespace MakeItSo
                         d => string.Format("-D {0}", d)
                     ).ToList();
 
-                // Add Unicode defines
-                if (configuration.CharacterSet == CharacterSet.Unicode)
-                {
-                    definitions.Add("-D UNICODE");
-                }
-
                 // We write the variable...
                 m_file.WriteLine("{0}={1}", variableName, Utils.join(" ", definitions));
             }
